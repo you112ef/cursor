@@ -1,0 +1,9 @@
+{
+  "name": "cursor-pages-static",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static site + Pages Functions deployed on Cloudflare Pages.",
+  "scripts": {
+    "build": "echo 'No build required for static site'"
+  }
+}
