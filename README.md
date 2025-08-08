@@ -10,6 +10,9 @@ A lightweight, open-source, multi-model chat app that runs on Cloudflare Pages w
 - Provider and model selector (from `/api/models`)
 - Chat with streaming for OpenAI-compatible providers
 - System prompt, temperature, max tokens controls
+- Tool-enabled mode (optional) for OpenAI-compatible providers:
+  - time_now, math_eval, http_get_text, http_get_json, extract_links
+  - Allowlist external origins via `allow_urls` (empty list permits any for demo)
 - Simple CORS for `/api/*`
 
 ## Endpoints
@@ -22,10 +25,12 @@ A lightweight, open-source, multi-model chat app that runs on Cloudflare Pages w
       "messages": [{"role": "user|assistant|system", "content": "..."}],
       "temperature": 0.7,
       "max_tokens": 1024,
-      "stream": true
+      "stream": true,
+      "use_tools": false,
+      "allow_urls": ["https://api.example.com"]
     }
     ```
-  - Returns SSE stream (if supported) or JSON with `{ text, raw }`.
+  - With `use_tools: true`, endpoint orchestrates tool calls for OpenAI-compatible providers (no streaming) and returns `{ text, steps }`.
 
 - `GET /api/models`
   - Returns supported providers and example model IDs used by the UI.

@@ -62,7 +62,12 @@
       <div id="messages" class="messages"></div>
       <form id="chat">
         <textarea id="input" placeholder="Ask anything..." required></textarea>
-        <button id="send" type="submit">Send</button>
+        <div>
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;">
+            <input id="usetools" type="checkbox" /> Enable tools
+          </label>
+          <button id="send" type="submit">Send</button>
+        </div>
       </form>
     </section>
   </main>
@@ -113,6 +118,7 @@
       const max_tokens = parseInt(document.getElementById('maxtok').value || '0');
       const provider = state.currentProvider;
       const model = state.currentModel;
+      const use_tools = document.getElementById('usetools').checked;
 
       if (system) state.messages.push({ role: 'system', content: system });
       state.messages.push({ role: 'user', content: text });
@@ -123,8 +129,10 @@
       state.controller = controller; state.streaming = true;
 
       const payload = {
-        provider, model, temperature, stream: true,
+        provider, model, temperature, stream: !use_tools,
         messages: state.messages.filter((_, i) => !(system && i === 0)),
+        use_tools,
+        allow_urls: [],
       };
       if (!isNaN(max_tokens) && max_tokens > 0) payload.max_tokens = max_tokens;
 
@@ -136,13 +144,15 @@
       });
 
       const ct = res.headers.get('content-type') || '';
-      if (ct.includes('text/event-stream')) {
+      if (!use_tools && ct.includes('text/event-stream')) {
         await readSSE(res);
       } else {
-        const data = await res.json().catch(()=>({text:''}));
+        const data = await res.json().catch(()=>({text:'', steps: []}));
         const last = state.messages[state.messages.length - 1];
         last.content = (data && data.text) ? data.text : last.content;
-        state.streaming = false; state.controller = null; render();
+        render();
+        if (Array.isArray(data.steps) && data.steps.length) renderSteps(data.steps);
+        state.streaming = false; state.controller = null;
       }
     }
 
@@ -171,6 +181,15 @@
         render();
       }
       state.streaming = false; state.controller = null; render();
+    }
+
+    function renderSteps(steps) {
+      const box = document.getElementById('messages');
+      const pre = document.createElement('pre');
+      pre.className = 'msg assistant';
+      pre.textContent = 'Tools executed:\n' + steps.map((s,i)=>`${i+1}. ${s.name} ${JSON.stringify(s.args)} => ${typeof s.result==='string'?s.result:JSON.stringify(s.result)}`).join('\n');
+      box.appendChild(pre);
+      box.scrollTop = box.scrollHeight;
     }
 
     document.getElementById('provider').addEventListener('change', (e) => { state.currentProvider = e.target.value; populateModels(); });
