@@ -25,3 +25,6 @@ jobs:
           projectName: cursor
           directory: site
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          wranglerVersion: '3'
+          # Explicitly no build command for static site
+          buildCommand: ""
