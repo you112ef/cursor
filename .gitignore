@@ -1,0 +1,17 @@
+# dependencies
+node_modules/
+
+# build outputs
+/dist/
+/.vercel/
+/.svelte-kit/
+/.output/
+/.astro/
+/.cache/
+
+# env
+.env*
+
+# OS/editor
+.DS_Store
+*.log
